@@ -22,6 +22,7 @@ import java.net.URL;
 import it.jaschke.alexandria.MainActivity;
 import it.jaschke.alexandria.R;
 import it.jaschke.alexandria.data.AlexandriaContract;
+import it.jaschke.alexandria.utils.NetworkUtil;
 
 
 /**
@@ -91,6 +92,19 @@ public class BookService extends IntentService {
 
         bookEntry.close();
 
+        /*
+        The app was crashing because the bookJsonString was null later down.
+        I decided to add a network check instead of a null check because it was the root of the problem,
+        It also gives the user insight into the real problem so they can correct it.
+        */
+        if (!NetworkUtil.isNetworkAvailable(getApplicationContext())) {
+            Log.w(LOG_TAG, "No network connection detected");
+            Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
+            messageIntent.putExtra(MainActivity.MESSAGE_KEY,"Oops!\nPlease check your network connection!");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
+            return;
+        }
+
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         String bookJsonString = null;
@@ -159,9 +173,9 @@ public class BookService extends IntentService {
         try {
             JSONObject bookJson = new JSONObject(bookJsonString);
             JSONArray bookArray;
-            if(bookJson.has(ITEMS)){
+            if (bookJson.has(ITEMS)){
                 bookArray = bookJson.getJSONArray(ITEMS);
-            }else{
+            } else {
                 Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
                 messageIntent.putExtra(MainActivity.MESSAGE_KEY,getResources().getString(R.string.not_found));
                 LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
