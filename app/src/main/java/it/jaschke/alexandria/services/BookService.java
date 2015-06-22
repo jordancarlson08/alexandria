@@ -98,9 +98,8 @@ public class BookService extends IntentService {
         It also gives the user insight into the real problem so they can correct it.
         */
         if (!NetworkUtil.isNetworkAvailable(getApplicationContext())) {
-            Log.w(LOG_TAG, "No network connection detected");
             Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
-            messageIntent.putExtra(MainActivity.MESSAGE_KEY,"Oops!\nPlease check your network connection!");
+            messageIntent.putExtra(MainActivity.MESSAGE_KEY,getString(R.string.error_no_network));
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
             return;
         }
