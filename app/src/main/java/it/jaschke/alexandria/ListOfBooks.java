@@ -22,6 +22,7 @@ import it.jaschke.alexandria.data.AlexandriaContract;
 
 public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String TAG = ListOfBooks.class.getSimpleName();
     private BookListAdapter bookListAdapter;
     private ListView bookList;
     private int position = ListView.INVALID_POSITION;
@@ -128,5 +129,12 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         activity.setTitle(R.string.books);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Fixed the lack of updating after a book is deleted.
+        ListOfBooks.this.restartLoader();
     }
 }

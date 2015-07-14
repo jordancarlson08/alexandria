@@ -38,6 +38,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
 
     private String mScanFormat = "Format:";
     private String mScanContents = "Contents:";
+    private boolean mIsValidSearchShown;
 
 
 
@@ -56,7 +57,10 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == Constants.REQUEST_CODE && resultCode == Constants.RESULT_OK) {
-            String barcode = data.getStringExtra(Constants.BARCODE);
+            String barcode = "";
+            if (data != null) {
+                barcode = data.getStringExtra(Constants.BARCODE);
+            }
 
             ean.setText(barcode);
         }
@@ -81,12 +85,17 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
 
             @Override
             public void afterTextChanged(Editable s) {
-                String ean =s.toString();
+                String ean = s.toString();
                 //catch isbn10 numbers
+
+                if(ean.length() == 0) {
+                    clearFields();
+                }
+
                 if(ean.length()==10 && !ean.startsWith("978")){
                     ean="978"+ean;
                 }
-                if(ean.length()<13){
+                if(ean.length() < 13 && !mIsValidSearchShown){
 
                     clearFields();
                     return;
@@ -164,6 +173,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         if (!data.moveToFirst()) {
             return;
         }
+        mIsValidSearchShown = true;
 
         String bookTitle = data.getString(data.getColumnIndex(AlexandriaContract.BookEntry.TITLE));
         ((TextView) rootView.findViewById(R.id.bookTitle)).setText(bookTitle);
@@ -172,9 +182,14 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         ((TextView) rootView.findViewById(R.id.bookSubTitle)).setText(bookSubTitle);
 
         String authors = data.getString(data.getColumnIndex(AlexandriaContract.AuthorEntry.AUTHOR));
-        String[] authorsArr = authors.split(",");
-        ((TextView) rootView.findViewById(R.id.authors)).setLines(authorsArr.length);
-        ((TextView) rootView.findViewById(R.id.authors)).setText(authors.replace(",","\n"));
+
+        //Crashes when authors is null. Better to leave out the authors than crash.
+        if (authors != null) {
+            String[] authorsArr = authors.split(",");
+            ((TextView) rootView.findViewById(R.id.authors)).setLines(authorsArr.length);
+            ((TextView) rootView.findViewById(R.id.authors)).setText(authors.replace(",","\n"));
+        }
+
         String imgUrl = data.getString(data.getColumnIndex(AlexandriaContract.BookEntry.IMAGE_URL));
         if(Patterns.WEB_URL.matcher(imgUrl).matches()){
             new DownloadImage((ImageView) rootView.findViewById(R.id.bookCover)).execute(imgUrl);
